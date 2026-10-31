@@ -344,7 +344,7 @@ function openProfile(){
   <label class="f">Nivel de actividad</label><select name="act">${ACT.map(([v,l])=>`<option value="${v}" ${+p.act===v?"selected":""}>${l}</option>`).join("")}</select>
   <label class="f">Objetivo</label><select name="obj">${Object.entries(GOALS).map(([k,[,l]])=>`<option value="${k}" ${p.obj===k?"selected":""}>${l}</option>`).join("")}</select>
   <button class="btn pri block" style="margin-top:16px">Guardar</button></form>
-  <details style="margin-top:18px" ${getKey()?"":"open"}><summary class="sub">▸ Fotos de comida con IA ${getKey()?"✓ activadas":""}</summary>
+  <details style="margin-top:18px" ${getKey()?"":"open"}><summary class="sub">▸ Calorías con IA ${getKey()?"✓ activadas":""}</summary>
    ${keyHelp()}
    <div class="row" style="margin-top:8px"><input id="apikey" type="password" autocomplete="off" placeholder="sk-ant-..." value="${esc(getKey())}"><button class="btn sm" data-act="saveKey">Guardar</button></div>
    <p class="sub" style="font-size:12px">La clave se guarda solo en este iPhone y no se incluye en las copias de seguridad.</p>
@@ -493,7 +493,7 @@ function vComida(){
       <div class="row between"><span>${t.n?(bal<0?"✅ Estás en <b class='neg'>déficit</b>":"⚠️ Estás en <b class='pos'>superávit</b>"):"Balance"}</span><b class="${bal<0?"neg":"pos"}" style="font-size:18px">${t.n?(bal>0?"+":"")+bal+" kcal":"—"}</b></div>
     </div></div>`;
   }
-  h+=`<div class="card"><div class="row between"><h3>Apuntar comida</h3><button class="btn sm pri" data-act="photoOpen">📷 Foto del plato</button></div><form id="ff"><div class="row" style="margin-top:8px"><input name="name" placeholder="Qué has comido" style="flex:2" required></div>
+  h+=`<div class="card"><div class="row between"><h3>Apuntar comida</h3><button class="btn sm pri" data-act="photoOpen">🤖 Calcular con IA</button></div><form id="ff"><div class="row" style="margin-top:8px"><input name="name" placeholder="Qué has comido" style="flex:2" required></div>
   <div class="row" style="margin-top:8px"><input name="kcal" type="number" inputmode="numeric" placeholder="kcal" required><input name="p" type="number" inputmode="decimal" placeholder="proteína g"><button class="btn pri">Añadir</button></div></form>
   ${frequentFoods().length?`<div class="sub" style="margin:12px 0 6px">Repetir rápido</div>${frequentFoods().map((x,i)=>`<span class="chip" data-act="quickFood" data-v="${i}">${esc(x.name)} · ${x.kcal}</span>`).join("")}`:""}</div>`;
   h+=`<div class="card"><div class="row between"><h3>Lo de ${d===today()?"hoy":"este día"}</h3><span class="sub">${t.kcal} kcal</span></div>
@@ -525,29 +525,31 @@ function setKey(k){try{k?localStorage.setItem("mientrenador_apikey",k):localStor
 function keyHelp(){return `<ol class="steps"><li>Entra en <a href="https://console.anthropic.com" style="color:var(--accent)">console.anthropic.com</a> y crea una cuenta.</li><li>En <b>Billing</b> añade saldo (con 5 € tienes para muchísimas fotos).</li><li>En <b>API Keys</b> pulsa <b>Create Key</b>, cópiala y pégala aquí.</li></ol>`}
 let PH=null;
 function photoOpen(){
-  if(!getKey()){openModal(`<h2>📷 Calorías por foto</h2><p class="sub">Para analizar fotos, la app necesita tu clave de la API de Claude. Solo hay que hacerlo una vez.</p>${keyHelp()}
+  if(!getKey()){openModal(`<h2>🤖 Calorías con IA</h2><p class="sub">Para calcular calorías con IA, la app necesita tu clave de la API de Claude. Solo hay que hacerlo una vez.</p>${keyHelp()}
     <div class="row"><input id="apikey" type="password" autocomplete="off" placeholder="sk-ant-..."><button class="btn pri" data-act="saveKey" data-v="photo">Guardar</button></div>`);return}
   PH={img:null,note:"",items:null,plato:"",com:"",conf:""};drawPhoto();
 }
 function drawPhoto(state){
-  let h=`<h2>📷 Foto del plato</h2>`;
-  if(state==="loading"){h+=`${PH.img?`<img class="photo-prev" src="${PH.img}">`:""}<div style="padding:24px 0;text-align:center"><div class="spin"></div><p class="sub">Analizando el plato…</p></div>`;openModal(h);return}
+  let h=`<h2>🤖 Calcular con IA</h2>`;
+  if(state==="loading"){h+=`${PH.img?`<img class="photo-prev" src="${PH.img}">`:""}<div style="padding:24px 0;text-align:center"><div class="spin"></div><p class="sub">Calculando calorías…</p></div>`;openModal(h);return}
   if(PH.items){
     h+=`${PH.img?`<img class="photo-prev" src="${PH.img}" style="max-height:160px">`:""}
     <label class="f">Nombre</label><input id="phName" value="${esc(PH.plato)}">
     <div class="airow" style="font-size:11px;color:var(--muted);text-transform:uppercase"><span></span><span>Alimento</span><span>kcal</span><span>prot g</span></div>
-    ${PH.items.map((it,i)=>`<div class="airow"><input type="checkbox" ${it.on?"checked":""} data-ph="on" data-i="${i}"><input value="${esc(it.nombre)}${it.gramos?" ("+it.gramos+" g)":""}" data-ph="nombre" data-i="${i}"><input type="number" inputmode="numeric" value="${it.kcal}" data-ph="kcal" data-i="${i}"><input type="number" inputmode="decimal" value="${it.proteina}" data-ph="proteina" data-i="${i}"></div>`).join("")||'<div class="empty">No he encontrado comida en la foto</div>'}
+    ${PH.items.map((it,i)=>`<div class="airow"><input type="checkbox" ${it.on?"checked":""} data-ph="on" data-i="${i}"><input value="${esc(it.nombre)}${it.gramos?" ("+it.gramos+" g)":""}" data-ph="nombre" data-i="${i}"><input type="number" inputmode="numeric" value="${it.kcal}" data-ph="kcal" data-i="${i}"><input type="number" inputmode="decimal" value="${it.proteina}" data-ph="proteina" data-i="${i}"></div>`).join("")||'<div class="empty">No he encontrado comida</div>'}
     <div class="row between" style="margin-top:14px"><b>Total</b><b id="phTot"></b></div>
     ${PH.com?`<p class="sub" style="margin-top:8px">${PH.conf?`Confianza ${esc(PH.conf)} · `:""}${esc(PH.com)}</p>`:""}
     <p class="sub" style="font-size:12px">Es una estimación: corrige las cantidades si sabes lo que pesa.</p>
     <div class="row" style="margin-top:12px"><button class="btn ghost" style="flex:1" data-act="photoRetry">Repetir</button><button class="btn pri" style="flex:2" data-act="photoAdd">Añadir a ${UI.foodDate===today()?"hoy":fmtDate(UI.foodDate)}</button></div>`;
     openModal(h);photoTotal();return;
   }
-  h+=`<input type="file" id="phFile" accept="image/*" style="display:none">
-  ${PH.img?`<img class="photo-prev" src="${PH.img}">`:""}
-  <label for="phFile" class="btn ${PH.img?"ghost":"pri"} block" style="display:block;text-align:center;margin-top:12px">${PH.img?"Cambiar foto":"Hacer foto o elegir de la galería"}</label>
-  <label class="f">Nota (opcional, mejora mucho la precisión)</label><input id="phNote" value="${esc(PH.note)}" placeholder="Ej: 200 g de arroz, cocinado con 1 cucharada de aceite">
-  <button class="btn pri block" style="margin-top:12px" data-act="photoGo" ${PH.img?"":"disabled style='opacity:.4;margin-top:12px'"}>Calcular calorías</button>`;
+  h+=`<label class="f" style="margin-top:4px">Escribe lo que has comido</label>
+  <textarea id="phNote" rows="3" placeholder="Ej: un plato de macarrones con tomate y atún, una manzana y un café con leche">${esc(PH.note)}</textarea>
+  <input type="file" id="phFile" accept="image/*" style="display:none">
+  ${PH.img?`<img class="photo-prev" src="${PH.img}"><button class="btn sm ghost" style="margin-top:6px" data-act="photoRm">Quitar foto</button>`:""}
+  <label for="phFile" class="btn ghost block" style="display:block;text-align:center;margin-top:10px">📷 ${PH.img?"Cambiar foto":"Añadir foto (opcional)"}</label>
+  <p class="sub" style="font-size:12px">Puedes escribir, mandar una foto o las dos cosas. Cuantos más detalles (gramos, aceite, salsas), mejor.</p>
+  <button class="btn pri block" style="margin-top:10px" data-act="photoGo">Calcular calorías</button>`;
   openModal(h);
   document.getElementById("phNote").oninput=e=>PH.note=e.target.value;
   document.getElementById("phFile").onchange=async e=>{const f=e.target.files[0];if(!f)return;try{PH.img=await resizeImg(f);drawPhoto()}catch(_){toast("No he podido abrir esa imagen")}};
@@ -557,17 +559,21 @@ function resizeImg(file){return new Promise((res,rej)=>{const url=URL.createObje
   img.onload=()=>{const m=1280;const sc=Math.min(1,m/Math.max(img.width,img.height));const c=document.createElement("canvas");c.width=Math.round(img.width*sc);c.height=Math.round(img.height*sc);c.getContext("2d").drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(url);res(c.toDataURL("image/jpeg",0.82))};
   img.onerror=()=>{URL.revokeObjectURL(url);rej()};img.src=url})}
 async function photoGo(){
-  if(!navigator.onLine){toast("Necesitas conexión a internet para analizar la foto");return}
+  PH.note=(document.getElementById("phNote")||{}).value||PH.note;
+  if(!PH.img&&!PH.note.trim()){toast("Escribe lo que has comido o añade una foto");return}
+  if(!navigator.onLine){toast("Necesitas conexión a internet para calcular con IA");return}
   drawPhoto("loading");
-  const prompt=`Eres un nutricionista experto. Estima las calorías y la proteína del plato de la foto.
+  const prompt=PH.img?`Eres un nutricionista experto. Estima las calorías y la proteína de la comida de la foto.
 Identifica cada alimento visible y estima su cantidad en gramos usando como referencia el tamaño del plato, los cubiertos y otros objetos. Incluye el aceite, mantequilla o salsas que probablemente lleve por cómo está cocinado. Usa valores nutricionales estándar de alimentos cocinados en España.
-Nota del usuario (si la hay, tiene prioridad sobre lo que veas): ${PH.note||"ninguna"}
+Descripción del usuario (si la hay, tiene prioridad sobre lo que veas): ${PH.note.trim()||"ninguna"}`:`Eres un nutricionista experto. Estima las calorías y la proteína de esta comida que describe el usuario:
+"${PH.note.trim()}"
+Separa cada alimento. Si no dice la cantidad, asume una ración normal de un adulto en España e indica los gramos que asumes. Incluye el aceite o las salsas que lleve normalmente esa preparación. Usa valores nutricionales estándar de alimentos cocinados en España.
 Responde SOLO con JSON válido, sin texto antes ni después, con este formato:
 {"plato":"nombre corto en español","items":[{"nombre":"alimento","gramos":0,"kcal":0,"proteina":0}],"confianza":"alta|media|baja","comentario":"una frase breve sobre lo que más incertidumbre añade"}
-Si en la foto no hay comida, devuelve {"plato":"","items":[],"confianza":"baja","comentario":"No veo comida en la foto"}.`;
+Si no hay comida, devuelve {"plato":"","items":[],"confianza":"baja","comentario":"No he encontrado comida"}.`;
   try{
     const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"content-type":"application/json","x-api-key":getKey(),"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
-      body:JSON.stringify({model:AI_MODEL,max_tokens:1200,messages:[{role:"user",content:[{type:"image",source:{type:"base64",media_type:"image/jpeg",data:PH.img.split(",")[1]}},{type:"text",text:prompt}]}]})});
+      body:JSON.stringify({model:AI_MODEL,max_tokens:1200,messages:[{role:"user",content:[...(PH.img?[{type:"image",source:{type:"base64",media_type:"image/jpeg",data:PH.img.split(",")[1]}}]:[]),{type:"text",text:prompt}]}]})});
     const data=await r.json().catch(()=>({}));
     if(!r.ok){const m=(data.error&&data.error.message)||"";
       throw new Error(r.status===401?"La clave no es válida. Revísala en ⚙️ → Fotos de comida con IA.":/credit|balance|billing/i.test(m)?"No te queda saldo en console.anthropic.com (Billing).":r.status===429?"Demasiadas peticiones seguidas. Espera un momento.":r.status>=500||r.status===529?"El servicio está saturado ahora mismo. Prueba en un minuto.":"Error "+r.status+": "+m)}
@@ -580,7 +586,7 @@ Si en la foto no hay comida, devuelve {"plato":"","items":[],"confianza":"baja",
 }
 function photoAdd(){const on=PH.items.filter(i=>i.on);if(!on.length){toast("Marca al menos un alimento");return}
   const name=(document.getElementById("phName").value||"Plato").trim();
-  addFood({name:"📷 "+name,kcal:on.reduce((a,i)=>a+(+i.kcal||0),0),p:r0(on.reduce((a,i)=>a+(+i.proteina||0),0)),detail:on.map(i=>i.nombre).join(", ")});
+  addFood({name:(PH.img?"📷 ":"🤖 ")+name,kcal:on.reduce((a,i)=>a+(+i.kcal||0),0),p:r0(on.reduce((a,i)=>a+(+i.proteina||0),0)),detail:on.map(i=>i.nombre).join(", ")});
   PH=null;closeModal();toast("Añadido ✓")}
 
 /* ================== PROGRESO ================== */
@@ -742,7 +748,7 @@ document.addEventListener("click",e=>{
     progStop:()=>confirmDlg("¿Quitar el calendario de 8 semanas? Tus rutinas se mantienen.","Quitar",()=>{delete S.main.program;saveMain();render()}),
     delBW:()=>confirmDlg("¿Borrar este registro de peso?","Borrar",()=>{S.main.bw=S.main.bw.filter(b=>b.d!==v);saveMain();render()}),
     gm:()=>{UI.guideM=UI.guideM===v?null:v;render()},
-    photoOpen, photoGo, photoAdd, photoRetry:()=>{PH.items=null;drawPhoto()},
+    photoOpen, photoGo, photoAdd, photoRetry:()=>{PH.items=null;drawPhoto()}, photoRm:()=>{PH.img=null;drawPhoto()},
     saveKey:()=>{const k=document.getElementById("apikey").value.trim();if(k&&!k.startsWith("sk-")){toast("Esa clave no parece correcta (empieza por sk-ant-)");return}setKey(k);toast(k?"Clave guardada ✓":"Clave borrada");if(v==="photo"&&k)photoOpen();else if(v==="photo")closeModal()},
     confirmYes:()=>{const f=CONFIRM_FN;CONFIRM_FN=null;closeModal();f&&f()},
     exportData:async()=>{try{await navigator.clipboard.writeText(JSON.stringify(S));toast("Copia copiada al portapapeles ✓")}catch(_){const t=document.getElementById("impTxt");t.style.display="block";t.value=JSON.stringify(S);t.select();toast("Selecciona y copia el texto")}},
